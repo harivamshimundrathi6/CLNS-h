@@ -29,24 +29,8 @@ export default auth(async (req) => {
         return;
     }
 
-    // Check maintenance mode — allow admin to always pass
-    if (!isAdminRoute && userRole !== "admin") {
-        try {
-            const maintenanceRes = await fetch(
-                new URL("/api/admin/maintenance", nextUrl).toString()
-            );
-            const { maintenanceMode } = await maintenanceRes.json();
+    // Maintenance check removed to prevent Vercel Edge Runtime crashes (MIDDLEWARE_INVOCATION_FAILED)
 
-            if (maintenanceMode) {
-                // Redirect everyone (logged in or not) to home page during maintenance
-                if (!isPublicRoute || nextUrl.pathname === "/login" || nextUrl.pathname === "/signup") {
-                    return NextResponse.redirect(new URL("/", nextUrl));
-                }
-            }
-        } catch {
-            // If check fails, let through (fail-open to avoid blocking real traffic)
-        }
-    }
 
     if (isDashboardRoute) {
         if (!isLoggedIn) {
