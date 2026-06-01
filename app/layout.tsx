@@ -1,18 +1,40 @@
 import type { Metadata } from "next";
+import { AuthProvider } from "@/components/providers/auth-provider";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
-
 
 export const metadata: Metadata = {
   title: "CLNS | Centralised Legal Network Solutions",
   description: "The first unified legal-tech ecosystem connecting clients, students, and advocates through a single digital platform.",
+  keywords: ["legal tech", "lawyer consultation", "law student internships", "advocate directory", "legal platform India"],
+  authors: [{ name: "CLNS Team" }],
+  openGraph: {
+    title: "CLNS | Centralised Legal Network Solutions",
+    description: "Connect with verified advocates, find legal internships, and manage cases in one unified ecosystem.",
+    url: "https://clns.com",
+    siteName: "CLNS",
+    images: [
+      {
+        url: "/clns-logo.png",
+        width: 1200,
+        height: 630,
+        alt: "CLNS Platform Logo",
+      },
+    ],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CLNS | Centralised Legal Network Solutions",
+    description: "The first unified legal-tech ecosystem connecting clients, students, and advocates.",
+    images: ["/clns-logo.png"],
+  },
   icons: {
     icon: "/favicon.png",
     apple: "/favicon.png",
   },
 };
-
-import { AuthProvider } from "@/components/providers/auth-provider";
-import { Toaster } from "@/components/ui/sonner";
 
 export const dynamic = 'force-dynamic';
 
@@ -36,8 +58,8 @@ export default async function RootLayout({
       <body className="antialiased">
         <AuthProvider>
           {children}
-          <Toaster />
         </AuthProvider>
+        <Toaster />
       </body>
     </html>
   );

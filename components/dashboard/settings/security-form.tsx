@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Lock, Eye, EyeOff } from "lucide-react";
-import { updatePassword } from "@/app/actions/user";
+import { updatePassword, checkHasPassword } from "@/app/actions/user";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -20,6 +20,12 @@ export function SecurityForm() {
         newPassword: "",
         confirmPassword: "",
     });
+
+    const [hasPassword, setHasPassword] = useState(true);
+
+    useEffect(() => {
+        checkHasPassword().then(setHasPassword);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,12 +43,13 @@ export function SecurityForm() {
         setLoading(true);
         try {
             const result = await updatePassword({
-                currentPassword: formData.currentPassword,
+                currentPassword: formData.currentPassword || "",
                 newPassword: formData.newPassword,
             });
 
             if (result.success) {
-                toast.success("Password updated successfully");
+                toast.success(hasPassword ? "Password updated successfully" : "Password created successfully");
+                setHasPassword(true);
                 setFormData({
                     currentPassword: "",
                     newPassword: "",
@@ -62,29 +69,31 @@ export function SecurityForm() {
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
-                <div className="grid gap-2">
-                    <Label htmlFor="currentPassword" className="text-slate-300 flex items-center gap-2">
-                        <Lock className="h-4 w-4" />
-                        Current Password
-                    </Label>
-                    <div className="relative">
-                        <Input
-                            id="currentPassword"
-                            type={showCurrentPassword ? "text" : "password"}
-                            value={formData.currentPassword}
-                            onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                            className="bg-white/5 border-white/10 text-white pr-10"
-                            required
-                        />
-                        <button
-                            type="button"
-                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-                        >
-                            {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
+                {hasPassword && (
+                    <div className="grid gap-2">
+                        <Label htmlFor="currentPassword" className="text-slate-300 flex items-center gap-2">
+                            <Lock className="h-4 w-4" />
+                            Current Password
+                        </Label>
+                        <div className="relative">
+                            <Input
+                                id="currentPassword"
+                                type={showCurrentPassword ? "text" : "password"}
+                                value={formData.currentPassword}
+                                onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                                className="bg-white/5 border-white/10 text-white pr-10"
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                            >
+                                {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className="grid gap-2">
                     <Label htmlFor="newPassword" className="text-slate-300">New Password</Label>

@@ -240,18 +240,15 @@ export async function updateInternship(id: string, data: {
             return { success: false, error: "Unauthorized or not found" };
         }
 
-        await db.internshipPosting.update({
-            where: { id },
-            data: {
-                title: data.title,
-                description: data.description,
-                company: data.company,
-                location: data.location,
-                type: data.type,
-                stipend: data.stipend,
-                duration: data.duration,
-                deadline: data.deadline,
-            }
+        await db.internshipPosting.update(id, {
+            title: data.title,
+            description: data.description,
+            company: data.company,
+            location: data.location,
+            type: data.type,
+            stipend: data.stipend,
+            duration: data.duration,
+            deadline: data.deadline,
         });
 
         revalidatePath("/dashboard/student");

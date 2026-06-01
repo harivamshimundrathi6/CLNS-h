@@ -1,3 +1,5 @@
+"use server";
+
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
 import { db } from "@/lib/db";
@@ -49,10 +51,7 @@ export async function fetchUsers() {
 
 export async function updateUserStatus(userId: string, status: "ACTIVE" | "SUSPENDED" | "PENDING" | "VERIFIED" | "REJECTED") {
     try {
-        const user = await db.user.update({
-            where: { id: userId },
-            data: { status: status as any }, // casting because Prisma enum might mismatch with string literal if not imported exact
-        });
+        const user = await db.user.update(userId, { status: status as any });
 
         await logSystemEvent("USER_UPDATE", `User ${user.email} status updated to ${status}`, "ADMIN_ACTION");
         revalidatePath("/dashboard/admin");
@@ -72,20 +71,14 @@ export async function approveVerification(requestId: string) {
 
         if (!request) return { success: false, error: "Request not found" };
 
-        await db.$transaction([
-            db.verificationRequest.update({
-                where: { id: requestId },
-                data: { status: "APPROVED" },
-            }),
-            db.user.update({
-                where: { id: request.userId },
-                data: { status: "ACTIVE" }, // Assuming APPROVED verification makes them ACTIVE or VERIFIED. Let's use ACTIVE or VERIFIED. Detailed plan said ACTIVE.
-            }),
+        await Promise.all([
+            db.verificationRequest.update(requestId, { status: "APPROVED" }),
+            db.user.update(request.userId, { status: "ACTIVE" }),
             db.systemLog.create({
                 action: "VERIFICATION_APPROVED",
                 description: `Verification approved for ${request.user.email}`,
                 userId: "ADMIN_ACTION",
-            }),
+            } as any),
         ]);
 
         revalidatePath("/dashboard/admin");
@@ -104,21 +97,14 @@ export async function rejectVerification(requestId: string) {
 
         if (!request) return { success: false, error: "Request not found" };
 
-        await db.$transaction([
-            db.verificationRequest.update({
-                where: { id: requestId },
-                data: { status: "REJECTED" },
-            }),
-            // Optionally suspend the user or just leave them pending/rejected
-            db.user.update({
-                where: { id: request.userId },
-                data: { status: "REJECTED" },
-            }),
+        await Promise.all([
+            db.verificationRequest.update(requestId, { status: "REJECTED" }),
+            db.user.update(request.userId, { status: "REJECTED" }),
             db.systemLog.create({
                 action: "VERIFICATION_REJECTED",
                 description: `Verification rejected for ${request.user.email}`,
                 userId: "ADMIN_ACTION",
-            }),
+            } as any),
         ]);
 
         revalidatePath("/dashboard/admin");
@@ -140,10 +126,7 @@ export async function updateUserRole(userId: string, newRole: UserRole) {
             return { success: false, error: "User not found" };
         }
 
-        await db.user.update({
-            where: { id: userId },
-            data: { role: newRole },
-        });
+        await db.user.update(userId, { role: newRole });
 
         await db.systemLog.create({
             action: "USER_ROLE_UPDATE",
@@ -171,12 +154,9 @@ export async function updateProfile(data: { name: string; email: string }) {
             return { success: false, error: "Name cannot be empty" };
         }
 
-        await db.user.update({
-            where: { id: session.user.id },
-            data: {
-                name: data.name.trim(),
-                // email: data.email // Email update usually requires verification, skipping for now or keeping it simple
-            },
+        await db.user.update(session.user.id, {
+            name: data.name.trim(),
+            // email: data.email
         });
 
         revalidatePath("/dashboard/admin/settings");
@@ -226,14 +206,12 @@ export async function createUser(data: { name: string; email: string; role: User
         const hashedPassword = await bcrypt.hash(password, 10);
 
         await db.user.create({
-            data: {
-                name: data.name,
-                email: data.email,
-                role: data.role,
-                password: hashedPassword,
-                status: "ACTIVE", // Admins create active users by default
-            },
-        });
+            name: data.name,
+            email: data.email,
+            role: data.role,
+            password: hashedPassword,
+            status: "ACTIVE", // Admins create active users by default
+        } as any);
 
         await db.systemLog.create({
             action: "USER_CREATE",

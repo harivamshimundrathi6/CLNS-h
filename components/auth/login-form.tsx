@@ -4,13 +4,14 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Loader2, Mail, Lock, Chrome } from "lucide-react";
+import { Loader2, Mail, Lock, Chrome, Bird } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
     const [isLoading, setIsLoading] = React.useState(false);
+    const [showGoogleRoleSelect, setShowGoogleRoleSelect] = React.useState(false);
     const router = useRouter();
     const [error, setError] = React.useState<string | null>(null);
 
@@ -110,10 +111,10 @@ export function LoginForm() {
                     </div>
                     {error && <div className="text-red-500 text-sm">{error}</div>}
                     <Button disabled={isLoading} className="bg-blue-600 hover:bg-blue-500 text-white mt-2">
-                        {isLoading && (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        )}
-                        Sign In with Email
+                        {isLoading ? (
+                            <Bird className="mr-2 h-4 w-4 animate-fly text-blue-300" />
+                        ) : null}
+                        {isLoading ? "Signing In..." : "Sign In with Email"}
                     </Button>
                 </div>
             </form>
@@ -130,16 +131,57 @@ export function LoginForm() {
             </div>
 
             <div className="grid gap-4">
-                <Button 
-                    variant="outline" 
-                    type="button" 
-                    disabled={isLoading} 
-                    className="w-full bg-white/5 border-white/10 hover:bg-white/10"
-                    onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-                >
-                    <Chrome className="mr-2 h-4 w-4" />
-                    Continue with Google
-                </Button>
+                {showGoogleRoleSelect ? (
+                    <div className="grid gap-2 animate-in fade-in zoom-in duration-200">
+                        <p className="text-sm text-center text-slate-400">Sign in as:</p>
+                        <div className="grid grid-cols-3 gap-2">
+                            <Button 
+                                variant="outline" 
+                                type="button" 
+                                className="bg-white/5 border-white/10 hover:bg-white/10 text-xs py-1 px-2"
+                                onClick={() => {
+                                    document.cookie = "google_oauth_role=CLIENT; path=/; max-age=300";
+                                    signIn("google", { callbackUrl: "/dashboard" });
+                                }}
+                            >
+                                Client
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                type="button" 
+                                className="bg-white/5 border-white/10 hover:bg-white/10 text-xs py-1 px-2"
+                                onClick={() => {
+                                    document.cookie = "google_oauth_role=STUDENT; path=/; max-age=300";
+                                    signIn("google", { callbackUrl: "/dashboard" });
+                                }}
+                            >
+                                Student
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                type="button" 
+                                className="bg-white/5 border-white/10 hover:bg-white/10 text-xs py-1 px-2"
+                                onClick={() => {
+                                    document.cookie = "google_oauth_role=ADVOCATE; path=/; max-age=300";
+                                    signIn("google", { callbackUrl: "/dashboard" });
+                                }}
+                            >
+                                Advocate
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <Button 
+                        variant="outline" 
+                        type="button" 
+                        disabled={isLoading} 
+                        className="w-full bg-white/5 border-white/10 hover:bg-white/10"
+                        onClick={() => setShowGoogleRoleSelect(true)}
+                    >
+                        <Chrome className="mr-2 h-4 w-4" />
+                        Continue with Google
+                    </Button>
+                )}
             </div>
 
             <div className="text-center text-sm">

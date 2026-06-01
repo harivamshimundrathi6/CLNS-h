@@ -2,25 +2,8 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-
-// Lazy load VideoHero for better initial page load
-const VideoHero = dynamic(() => import("@/components/ui/video-hero").then((mod) => ({ default: mod.VideoHero })), {
-  loading: () => (
-    <section className="relative isolate flex min-h-[92vh] w-full items-center justify-center overflow-hidden text-white bg-[#020817]">
-      <div className="absolute inset-0 flex items-center justify-center bg-black/70">
-        <Image
-          src="/video-hero/CLNS-removebg-preview123.png"
-          alt="CLNS loading"
-          width={400}
-          height={400}
-          priority
-          className="object-contain p-8 sm:p-16"
-        />
-      </div>
-    </section>
-  ),
-  ssr: false,
-});
+import { motion } from "framer-motion";
+import { VideoHero } from "@/components/ui/video-hero";
 
 // Lazy load below-the-fold components
 const ServiceCategoriesSection = dynamic(
@@ -89,65 +72,108 @@ export default function Home() {
   ];
 
   return (
-    <main className="relative min-h-screen bg-[#030914] text-white">
+    <main className="relative min-h-screen bg-[#030914] text-white overflow-hidden">
       <VideoHero />
-      <ServiceCategoriesSection />
-      <AboutSection />
-      <section id="partners" className="w-full bg-[#030914] py-32 transition-standard">
+      
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <ServiceCategoriesSection />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <AboutSection />
+      </motion.div>
+
+      <motion.section 
+        id="partners" 
+        className="w-full bg-[#030914] py-32 transition-standard"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+      >
         <div className="mx-auto flex max-w-5xl flex-col items-center px-6 text-center text-white">
-          <h2 className="mt-4 text-3xl font-semibold md:text-4xl">Trusted by these institutions</h2>
+          <h2 className="mt-4 text-3xl font-semibold md:text-4xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
+            Trusted by these institutions
+          </h2>
         </div>
         <div className="mt-12 px-6">
           <MarqueePartners />
         </div>
-      </section>
+      </motion.section>
+
       <TestimonialsSection
         title="What our users say"
         description="See how clients, students, and advocates rely on CLNS to stay fast, transparent, and compliant."
         testimonials={marqueeTestimonials}
         className="bg-[#030914] text-white"
       />
-      <section id="download" className="w-full bg-[#020712] px-6 py-28 text-white transition-standard">
-        <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
+
+      <motion.section 
+        id="download" 
+        className="relative w-full bg-[#020712] px-6 py-28 text-white transition-standard overflow-hidden"
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.6 }}
+      >
+        {/* Decorative background blur */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="relative mx-auto flex max-w-5xl flex-col items-center text-center z-10">
           <HandWrittenTitle
             title="Access CLNS On The Go"
             subtitle="Manage cases, connect with lawyers, and stay updated anywhere."
             className="mb-10"
           />
           <div className="flex w-full flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-6">
-            <a
+            <motion.a
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
               href="https://play.google.com/store/apps/details?id=com.clns.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex w-full max-w-xs items-center gap-3 rounded-3xl border border-white/20 bg-white/5 px-5 py-4 text-left shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur transition-all duration-200 ease-out hover:border-white/40 sm:w-auto"
+              className="flex w-full max-w-xs items-center gap-3 rounded-3xl border border-white/10 bg-white/5 px-6 py-4 text-left shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-300 ease-out hover:border-white/30 hover:bg-white/10 sm:w-auto hover:shadow-[0_30px_60px_-15px_rgba(59,130,246,0.3)]"
             >
               <Image src="/play-store.jpg" alt="Google Play" width={32} height={32} className="h-8 w-8 object-contain" loading="lazy" />
               <div className="flex flex-col">
-                <span className="text-xs uppercase tracking-[0.3em] text-white/60">Get it on</span>
-                <span className="text-lg font-semibold text-white">Google Play</span>
+                <span className="text-xs uppercase tracking-[0.3em] text-white/50 font-medium">Get it on</span>
+                <span className="text-lg font-semibold text-white tracking-tight">Google Play</span>
               </div>
-            </a>
-            <a
+            </motion.a>
+            <motion.a
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
               href="https://apps.apple.com/in/app/clns-law-services-made-easy/id6741812022"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex w-full max-w-xs items-center gap-3 rounded-3xl border border-white/20 bg-white/5 px-5 py-4 text-left shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur transition-all duration-200 ease-out hover:border-white/40 sm:w-auto"
+              className="flex w-full max-w-xs items-center gap-3 rounded-3xl border border-white/10 bg-white/5 px-6 py-4 text-left shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-300 ease-out hover:border-white/30 hover:bg-white/10 sm:w-auto hover:shadow-[0_30px_60px_-15px_rgba(59,130,246,0.3)]"
             >
               <Image src="/app-store.jpg" alt="App Store" width={32} height={32} className="h-8 w-8 object-contain" loading="lazy" />
               <div className="flex flex-col">
-                <span className="text-xs uppercase tracking-[0.3em] text-white/60">Download on the</span>
-                <span className="text-lg font-semibold text-white">App Store</span>
+                <span className="text-xs uppercase tracking-[0.3em] text-white/50 font-medium">Download on the</span>
+                <span className="text-lg font-semibold text-white tracking-tight">App Store</span>
               </div>
-            </a>
+            </motion.a>
           </div>
-          <p className="mt-6 max-w-2xl text-sm text-white/60">
+          <p className="mt-8 max-w-2xl text-sm text-white/50 tracking-wide">
             The CLNS mobile app keeps your briefs, hearings, and legal network synced in real time across every device.
           </p>
         </div>
-      </section>
+      </motion.section>
 
       <CTAContactSection />
       <Footerdemo />
     </main>
   );
 }
+

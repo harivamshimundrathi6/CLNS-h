@@ -2,16 +2,27 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Loader2, Mail, Lock, User, Briefcase, GraduationCap } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { Loader2, Mail, Lock, User, Briefcase, GraduationCap, Chrome } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 export function SignupForm() {
+    const searchParams = useSearchParams();
+    const roleParam = searchParams.get("role")?.toLowerCase();
+    
+    // Validate role param, otherwise fallback to "client"
+    const initialRole = 
+        (roleParam === "student" || roleParam === "advocate" || roleParam === "client") 
+            ? roleParam 
+            : "client";
+
     const [isLoading, setIsLoading] = React.useState(false);
-    const [selectedRole, setSelectedRole] = React.useState<"client" | "student" | "advocate">("client");
+    const [selectedRole, setSelectedRole] = React.useState<"client" | "student" | "advocate">(initialRole);
+    const [showGoogleRoleSelect, setShowGoogleRoleSelect] = React.useState(false);
     const router = useRouter();
     const [error, setError] = React.useState<string | null>(null);
 
@@ -161,6 +172,71 @@ export function SignupForm() {
                     </Button>
                 </div>
             </form>
+
+            <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-white/10" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-[#020817] px-2 text-slate-500">
+                        Or continue with
+                    </span>
+                </div>
+            </div>
+
+            <div className="grid gap-4">
+                {showGoogleRoleSelect ? (
+                    <div className="grid gap-2 animate-in fade-in zoom-in duration-200">
+                        <p className="text-sm text-center text-slate-400">Sign up as:</p>
+                        <div className="grid grid-cols-3 gap-2">
+                            <Button 
+                                variant="outline" 
+                                type="button" 
+                                className="bg-white/5 border-white/10 hover:bg-white/10 text-xs py-1 px-2"
+                                onClick={() => {
+                                    document.cookie = "google_oauth_role=CLIENT; path=/; max-age=300";
+                                    signIn("google", { callbackUrl: "/dashboard" });
+                                }}
+                            >
+                                Client
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                type="button" 
+                                className="bg-white/5 border-white/10 hover:bg-white/10 text-xs py-1 px-2"
+                                onClick={() => {
+                                    document.cookie = "google_oauth_role=STUDENT; path=/; max-age=300";
+                                    signIn("google", { callbackUrl: "/dashboard" });
+                                }}
+                            >
+                                Student
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                type="button" 
+                                className="bg-white/5 border-white/10 hover:bg-white/10 text-xs py-1 px-2"
+                                onClick={() => {
+                                    document.cookie = "google_oauth_role=ADVOCATE; path=/; max-age=300";
+                                    signIn("google", { callbackUrl: "/dashboard" });
+                                }}
+                            >
+                                Advocate
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <Button 
+                        variant="outline" 
+                        type="button" 
+                        disabled={isLoading} 
+                        className="w-full bg-white/5 border-white/10 hover:bg-white/10"
+                        onClick={() => setShowGoogleRoleSelect(true)}
+                    >
+                        <Chrome className="mr-2 h-4 w-4" />
+                        Continue with Google
+                    </Button>
+                )}
+            </div>
 
             <div className="text-center text-sm">
                 Already have an account?{" "}

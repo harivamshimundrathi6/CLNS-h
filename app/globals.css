@@ -16,6 +16,18 @@
     animation: marquee-scroll 35s linear infinite;
     will-change: transform;
   }
+
+  @keyframes fly {
+    0% { transform: translateY(0) rotate(0deg) scale(1); }
+    25% { transform: translateY(-4px) rotate(-5deg) scale(1.05); }
+    50% { transform: translateY(0) rotate(0deg) scale(1); }
+    75% { transform: translateY(4px) rotate(5deg) scale(0.95); }
+    100% { transform: translateY(0) rotate(0deg) scale(1); }
+  }
+
+  .animate-fly {
+    animation: fly 1s ease-in-out infinite;
+  }
 }
 
 

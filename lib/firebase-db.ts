@@ -142,33 +142,33 @@ export const caseOperations = {
 
     // Handle includes
     if (options.include?.client) {
-      for (const caseItem of cases) {
+      await Promise.all(cases.map(async (caseItem) => {
         if (caseItem.clientId) {
           const clientDoc = await getDoc(doc(db, "users", caseItem.clientId));
           if (clientDoc.exists()) {
             (caseItem as any).client = { id: clientDoc.id, ...clientDoc.data() };
           }
         }
-      }
+      }));
     }
 
     if (options.include?.advocate) {
-      for (const caseItem of cases) {
+      await Promise.all(cases.map(async (caseItem) => {
         if (caseItem.advocateId) {
           const advocateDoc = await getDoc(doc(db, "users", caseItem.advocateId));
           if (advocateDoc.exists()) {
             (caseItem as any).advocate = { id: advocateDoc.id, ...advocateDoc.data() };
           }
         }
-      }
+      }));
     }
 
     if (options.include?.hearings) {
-      for (const caseItem of cases) {
+      await Promise.all(cases.map(async (caseItem) => {
         const hearingsQ = query(collection(db, "hearings"), where("caseId", "==", caseItem.id));
         const hearingsSnapshot = await getDocs(hearingsQ);
         (caseItem as any).hearings = hearingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      }
+      }));
     }
 
     return cases;

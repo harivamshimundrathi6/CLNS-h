@@ -14,7 +14,7 @@ export const authConfig = {
                 return false; // Redirect unauthenticated users to login page
             } else if (isLoggedIn) {
                 // Redirect authenticated users to their specific dashboard if they visit login/home
-                const role = (auth.user as any).role;
+                const role = (auth.user as any).role || "CLIENT";
                 // Prevent redirect loop if already on correct dashboard
                 if (!nextUrl.pathname.startsWith(`/dashboard/${role.toLowerCase()}`)) {
                     // This logic is handled better in middleware matcher or client-side, 

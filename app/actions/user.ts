@@ -43,16 +43,17 @@ export async function updateUserProfile(data: {
 
         const fullName = `${data.firstName} ${data.lastName}`.trim();
 
-        await db.user.update({
-            where: { id: session.user.id },
-            data: {
+        const updateData = Object.fromEntries(
+            Object.entries({
                 name: fullName,
                 bio: data.bio,
                 college: data.college,
                 barId: data.barId,
                 resumeUrl: data.resumeUrl,
-            }
-        });
+            }).filter(([_, v]) => v !== undefined)
+        );
+
+        await db.user.update(session.user.id, updateData);
 
         revalidatePath("/dashboard");
         return { success: true };
@@ -94,10 +95,7 @@ export async function uploadResume(formData: FormData) {
         const dataUrl = `data:${file.type};base64,${base64}`;
 
         // Update user's resumeUrl
-        await db.user.update({
-            where: { id: session.user.id },
-            data: { resumeUrl: dataUrl }
-        });
+        await db.user.update(session.user.id, { resumeUrl: dataUrl });
 
         revalidatePath("/dashboard");
         revalidatePath("/dashboard/student/applications");
@@ -146,10 +144,7 @@ export async function uploadProfilePhoto(formData: FormData) {
         
         // Store image URL in database
         // In production, upload to cloud storage (S3/Cloudinary) and store the URL
-        await db.user.update({
-            where: { id: session.user.id },
-            data: { imageUrl: dataUrl }
-        });
+        await db.user.update(session.user.id, { imageUrl: dataUrl });
         
         revalidatePath("/dashboard");
         revalidatePath("/dashboard/*/settings");
@@ -160,8 +155,24 @@ export async function uploadProfilePhoto(formData: FormData) {
     }
 }
 
+export async function checkHasPassword() {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) return false;
+
+        const user = await db.user.findUnique({
+            where: { id: session.user.id },
+            select: { password: true }
+        });
+
+        return !!user?.password;
+    } catch {
+        return false;
+    }
+}
+
 export async function updatePassword(data: {
-    currentPassword: string;
+    currentPassword?: string;
     newPassword: string;
 }) {
     try {
@@ -179,22 +190,25 @@ export async function updatePassword(data: {
             return { success: false, error: "User not found" };
         }
 
-        // Verify current password
         const bcrypt = require("bcryptjs");
-        const isCurrentPasswordValid = await bcrypt.compare(data.currentPassword, user.password);
         
-        if (!isCurrentPasswordValid) {
-            return { success: false, error: "Current password is incorrect" };
+        // Verify current password only if one exists
+        if (user.password) {
+            if (!data.currentPassword) {
+                return { success: false, error: "Current password is required" };
+            }
+            const isCurrentPasswordValid = await bcrypt.compare(data.currentPassword, user.password);
+            
+            if (!isCurrentPasswordValid) {
+                return { success: false, error: "Current password is incorrect" };
+            }
         }
 
         // Hash new password
         const hashedNewPassword = await bcrypt.hash(data.newPassword, 10);
 
         // Update password
-        await db.user.update({
-            where: { id: session.user.id },
-            data: { password: hashedNewPassword }
-        });
+        await db.user.update(session.user.id, { password: hashedNewPassword });
 
         revalidatePath("/dashboard");
         return { success: true };

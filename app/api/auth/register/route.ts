@@ -53,7 +53,11 @@ export async function POST(req: Request) {
         }
 
         // Send email verification
-        await sendEmailVerification(firebaseUser);
+        const actionCodeSettings = {
+            url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/verify-callback`,
+            handleCodeInApp: true,
+        };
+        await sendEmailVerification(firebaseUser, actionCodeSettings);
 
         // Firebase Client SDK automatically logs the user in on creation. 
         // We will sign them out immediately so they have to verify their email and log in manually.
